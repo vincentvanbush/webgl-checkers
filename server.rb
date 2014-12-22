@@ -50,10 +50,15 @@ end
 
 namespace '/games' do
   get '/:id' do |id|
-    $games[id] ||= Game.new
-    @id = id
     @uid = params['uid']
-    erb :game
+    if $players[@uid].nil?
+      status 403
+      body "Player #{@uid} does not exist"
+    else
+      @id = id
+      $games[id] ||= Game.new
+      erb :game
+    end
   end
 
   post do
@@ -78,26 +83,23 @@ namespace '/games' do
             when 'black' then :black
           end
           $games[id].sit color, uid
-          "#{uid} sits in game #{id} as #{color}"
+          "#{$players[uid]} sits in game #{id} as #{color}"
         when 'unsit'
           $games[id].unsit uid
-          "#{uid} unsits in game #{id}"
+          "#{$players[uid]} unsits in game #{id}"
         when 'move'
           valid_uid = case $games[id].turn
             when 'w' then $games[id].white
             when 'b' then $games[id].black
           end
-          raise "invalid uid #{uid}, expected #{valid_uid}" unless uid == valid_uid
+          raise "This is #{$players[valid_uid]}'s turn.'" unless uid == valid_uid
           a = [ params['a1'].to_i, params['a2'].to_i ]
           b = [ params['b1'].to_i, params['b2'].to_i ]
           $games[id].move a, b
           "Moved from #{a} to #{b} in game #{id}"
         else
-          raise "Unknown message type from #{uid}: #{msg_type}"
+          raise "Unknown message type from #{$players[uid]}: #{msg_type}"
         end
-
-        # params['white'] = $players[params['white']]
-        # params['black'] = $players[params['black']]
 
         notification = params.merge( {'timestamp' => timestamp} ).to_json
         notif_data = "data: #{notification}\n\n"
