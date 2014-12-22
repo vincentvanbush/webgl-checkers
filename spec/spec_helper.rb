@@ -1,4 +1,6 @@
-# spec/spec_helper.rb
+require 'simplecov'
+SimpleCov.start
+
 require 'rack/test'
 
 require File.expand_path '../../server.rb', __FILE__

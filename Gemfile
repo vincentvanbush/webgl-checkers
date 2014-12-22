@@ -6,3 +6,4 @@ gem 'thin'
 gem 'rest-client'
 gem 'shotgun'
 gem 'rspec'
+gem 'simplecov', :require => false, :group => :test
