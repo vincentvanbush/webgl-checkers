@@ -49,10 +49,13 @@ var move = function() {
   var b1 = $("#b1").val();
   var b2 = $("#b2").val();
 
-  $.ajax({
+  var req = $.ajax({
     type: 'PATCH',
     url: '/games/' + game_id,
-    data: { 'uid': uid, 'msg-type': 'move', 'a1': a1, 'a2': a2, 'b1': b1, 'b2': b2  }
+    data: { 'uid': uid, 'msg-type': 'move', 'a1': a1, 'a2': a2, 'b1': b1, 'b2': b2  },
+    statusCode: {
+      403: function (response) { alert (response.responseText) }
+    }
   });
 }
 
