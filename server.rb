@@ -119,8 +119,10 @@ namespace '/games' do
       stream :keep_open do |out|
         puts "Opening stream for #{id}, #{uid}"
         $games[id].join uid, out
-        out.callback { $games[id].leave uid
-          puts "Closing stream for #{id}, #{uid}" }
+        out.callback do
+          $games[id].leave uid
+          puts "Closing stream for #{id}, #{uid}"
+        end
       end
     else
       status 403

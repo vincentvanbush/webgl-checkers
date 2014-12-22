@@ -12,6 +12,12 @@ class Game
 
   def join uid, stream
     @user_streams[uid] = stream
+    Thread.new do
+      until stream.closed? do
+        stream << "\0"
+        sleep 29
+      end
+    end
   end
 
   def sit color, uid
