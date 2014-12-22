@@ -14,8 +14,8 @@ class Game
     @user_streams[uid] = stream
     Thread.new do
       until stream.closed? do
-        stream << "\0"
         sleep 29
+        stream << "data: { 'msg-type': 'keep-alive' }\n\n"
       end
     end
   end
@@ -55,9 +55,9 @@ class Game
 
   def notify_all data
     @user_streams.values.each { |stream|
-      puts "pushing #{data} into #{stream}"
+      STDERR.puts "pushing #{data} into #{stream}"
       stream << data
-      puts "...pushed successfully!"
+      STDERR.puts "...pushed successfully!"
     }
   end
 
