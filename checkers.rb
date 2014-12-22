@@ -2,7 +2,7 @@
 
 class Checkerboard
 
-  attr_reader :board, :turn
+  attr_reader :board, :turn, :history
 
   def validate_args a, b
     raise "Expecting a to be an array: #{a.inspect}" unless a.kind_of?(Array)
@@ -51,7 +51,7 @@ class Checkerboard
         x.map! { |item| item.downcase }
 
         if [capture_pattern_1, capture_pattern_2].include?(x)
-          print_board
+          # print_board
           return true
         end
       end
@@ -163,6 +163,7 @@ class Checkerboard
   end
 
   def initialize
+    @history = []
     @turn = 'w'
     @board = [
       ['', 'b', '', 'b', '', 'b', '', 'b', '', 'b'],
@@ -195,10 +196,8 @@ class Checkerboard
     validate_move a, b
     is_capture = valid_capture_move? a, b
     do_move a, b
+    @history << { player: @turn, move: [a, b] }
     swap_turn unless is_capture and can_capture?
-    print "Moving #{a} to #{b}\n"
-    print "Turn for: #{@turn}, must capture: #{can_capture?}\n"
-    print_board
   end
 
   def print_board
@@ -210,24 +209,4 @@ class Checkerboard
     end
   end
 
-end
-
-if __FILE__ == $0
-  board = Checkerboard.new
-  board.print_board
-  print board.end?
-
-  # board.move [4, 1], [5, 0]
-
-  # board.move [6,1], [5,2]
-  # board.move [3,0], [4,1]
-  # board.move [5,2], [3,0]
-  # board.move [3,2], [4,1]
-  # board.move [3,0], [5,2]
-  # board.move [3,4], [4,5]
-  # board.move [5,2], [4,3]
-  # board.move [2,5], [3,4]
-  # board.move [4,3], [2,5]
-  # board.move [2,5], [4,7]
-  # board.move [3,8], [5,6]
 end

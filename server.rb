@@ -1,36 +1,114 @@
 require 'sinatra'
+require 'sinatra/assetpack'
+require "sinatra/namespace"
+require 'securerandom'
+
 require 'json'
-require './checkers.rb'
+require './game.rb'
+require './helpers.rb'
 
-set :public_folder, Proc.new { File.join(root, "public") }
 set server: 'thin'
+set :raise_errors, true
+set :dump_errors, false
+set :show_exceptions, false
 
-connections = Hash.new([])
+enable :sessions
 
-def timestamp
-  Time.now.strftime("%H:%M:%S")
+$games = Hash.new
+$players = Hash.new
+
+register Sinatra::AssetPack
+
+assets do
+  js :application, ['/js/*.js']
+  css :application, ['/css/*.css']
+end
+
+def register_player nick
+  uid = SecureRandom.uuid
+  $players[uid] = nick
+  uid
+end
+
+def unregister_player uid
+  $players[uid] = nil
 end
 
 get '/' do
-  erb :receiver
+  erb :index
 end
 
-get '/admin' do
-  erb :admin
+post '/players' do
+  nick = params['nick']
+  uid = register_player nick
+  body uid
 end
 
-get '/stream/:id', provides: 'text/event-stream' do |id|
-  stream :keep_open do |out|
-    connections[id] = [out].concat(connections[id])
+delete '/players/:uid' do |uid|
+  unregister_player uid
+end
 
-    out.callback do
-      connections.delete(out)
+namespace '/games' do
+  get '/:id' do
+    erb :game
+  end
+
+  post do
+    id = params['id']
+    $games[id] = Game.new
+    redirect "/games/#{id}"
+  end
+
+  patch '/:id' do |id|
+    begin
+      if $games[id].nil?
+        status 403
+        body "Game #{id} does not exist"
+      else
+        msg_type = params['msg-type']
+        uid = params['uid']
+
+        case msg_type
+        when 'sit'
+          color = case params['color']
+            when 'white' then :white
+            when 'black' then :black
+          end
+          $games[id].sit color, uid
+          "#{uid} sits in game #{id} as #{color}"
+        when 'unsit'
+          $games[id].unsit uid
+          "#{uid} unsits in game #{id}"
+        when 'move'
+          valid_uid = case $games[id].turn
+            when 'w' then $games[id].white
+            when 'b' then $games[id].black
+          end
+          raise 'invalid uid' unless uid == valid_uid
+          a = [ params['a1'].to_i, params['a2'].to_i ]
+          b = [ params['b1'].to_i, params['b2'].to_i ]
+          $games[id].move a, b
+          "Moved from #{a} to #{b} in game #{id}"
+        else
+          raise "Unknown message type from #{uid}: #{msg_type}"
+        end
+
+        notification = params.merge( {'timestamp' => timestamp} ).to_json
+        notif_data = "data: #{notification}\n\n"
+        $games[id].notify_all(notif_data)
+      end
+    rescue Exception
+      status 403
+      body "Error: #{$!}"
     end
   end
-end
 
-post '/push/:id' do |id|
-  puts params
-  notification = params.merge( {'timestamp' => timestamp} ).to_json
-  connections[id].each { |out| out << "data: #{notification}\n\n" }
+  get '/:id/stream', provides: 'text/event-stream' do |id|
+    uid = params['uid']
+    stream :keep_open do |out|
+      $games[id].join uid, out
+      out.callback { $games[id].leave uid }
+    end
+  end
+
 end
