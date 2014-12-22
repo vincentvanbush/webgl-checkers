@@ -48,7 +48,11 @@ class Game
   end
 
   def notify_all data
-    @user_streams.values.each { |stream| stream << data }
+    @user_streams.values.each { |stream|
+      puts "pushing #{data} into #{stream}"
+      stream << data
+      puts "...pushed successfully!"
+    }
   end
 
   def state

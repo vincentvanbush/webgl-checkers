@@ -49,7 +49,8 @@ delete '/players/:uid' do |uid|
 end
 
 namespace '/games' do
-  get '/:id' do
+  get '/:id' do |id|
+    @id = id
     erb :game
   end
 
@@ -96,8 +97,10 @@ namespace '/games' do
         notification = params.merge( {'timestamp' => timestamp} ).to_json
         notif_data = "data: #{notification}\n\n"
         $games[id].notify_all(notif_data)
+        "Patched #{id} succesfully: #{notif_data}"
       end
     rescue Exception
+      puts "#{$!}"
       status 403
       body "Error: #{$!}"
     end
@@ -112,9 +115,16 @@ namespace '/games' do
 
   get '/:id/stream', provides: 'text/event-stream' do |id|
     uid = params['uid']
-    stream :keep_open do |out|
-      $games[id].join uid, out
-      out.callback { $games[id].leave uid }
+    unless $players[uid] == nil
+      stream :keep_open do |out|
+        puts "Opening stream for #{id}, #{uid}"
+        $games[id].join uid, out
+        out.callback { $games[id].leave uid
+          puts "Closing stream for #{id}, #{uid}" }
+      end
+    else
+      status 403
+      body "Player #{uid} does not exist"
     end
   end
 
