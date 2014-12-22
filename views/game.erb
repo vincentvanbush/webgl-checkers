@@ -1,21 +1,11 @@
-<!-- <div id="wrapper">
-  <input type="text" id="connection" placeholder="Connection ID" /><br>
-  <input type="text" id="message" placeholder="Enter Notification Here" /><br>
-  <input type="button" id="send" data-role="button" value="Push" />
-</div>
-<script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="/js/push.js"></script> -->
-
 <form id="uid_form">
   <input id="game_id" type="hidden" value="<%= @id %>" />
-  <input id="uid" type="text" placeholder="UID" />
+  <input id="uid" type="hidden" value="<%= @uid %>" />
 </div>
 
 <form id="actions_form">
-  <a href="#" onclick="create()">create</a>
-  <a href="#" onclick="listen()">listen</a>
   <a href="#" onclick="state()">state</a>
-  <a href="#" onclick="board()">board</a>
+  <a href="#" onclick="ajaxBoard('<%= @id %>', displayBoard)">board</a>
 </div>
 
 <div id="sit_form">
@@ -33,9 +23,13 @@
   <a href="#" onclick="move()">move</a>
 </div>
 
+<div id="board">
+
+</div>
+
 <div id="notifications">
 
 </div>
 
-<script type="text/javascript" src="/js/game.js"></script>
 <script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="/js/game.js"></script>

@@ -50,7 +50,9 @@ end
 
 namespace '/games' do
   get '/:id' do |id|
+    $games[id] ||= Game.new
     @id = id
+    @uid = params['uid']
     erb :game
   end
 
@@ -94,13 +96,16 @@ namespace '/games' do
           raise "Unknown message type from #{uid}: #{msg_type}"
         end
 
+        # params['white'] = $players[params['white']]
+        # params['black'] = $players[params['black']]
+
         notification = params.merge( {'timestamp' => timestamp} ).to_json
         notif_data = "data: #{notification}\n\n"
         $games[id].notify_all(notif_data)
         "Patched #{id} succesfully: #{notif_data}"
       end
     rescue Exception
-      puts "#{$!}"
+      STDERR.puts "#{$!}"
       status 403
       body "Error: #{$!}"
     end
@@ -117,11 +122,11 @@ namespace '/games' do
     uid = params['uid']
     unless $players[uid] == nil
       stream :keep_open do |out|
-        puts "Opening stream for #{id}, #{uid}"
+        STDERR.puts "Opening stream for #{id}, #{uid}"
         $games[id].join uid, out
         out.callback do
           $games[id].leave uid
-          puts "Closing stream for #{id}, #{uid}"
+          STDERR.puts "Closing stream for #{id}, #{uid}"
         end
       end
     else
