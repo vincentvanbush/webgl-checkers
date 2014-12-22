@@ -1,7 +1,7 @@
 context 'games' do
   it 'creates a new game' do
     expect do
-      post '/games', params={ 'id' => 'abcdef' }
+      post '/games', params = { 'id' => 'abcdef' }
     end.to change{ $games.count }.from(0).to(1)
   end
 
@@ -136,6 +136,75 @@ context 'games' do
         game.user_streams.values.each do |stream|
           params.values.each { |val| expect(stream).to include(val) }
         end
+      end
+
+    end
+
+  end
+
+  context 'state' do
+    before do
+      post '/games', params = { 'id' => 'abcdef' }
+      get '/games/abcdef/state'
+    end
+
+    let(:parsed) { JSON.parse(last_response.body) }
+    let(:board) { JSON.parse(parsed['board']) }
+    let(:game) { $games['abcdef'] }
+
+    it 'returns proper board size' do
+      expect(board.size).to eq(10)
+      board.each { |row| expect(row.size).to eq(10) }
+    end
+
+    it 'returns proper turn' do
+      expect(parsed['turn']).to eq('w')
+    end
+
+    it 'returns proper white and black uids' do
+      expect(parsed['white']).to eq(nil)
+      expect(parsed['black']).to eq(nil)
+    end
+
+    context 'after player joins the game' do
+      let(:uid) do
+        post '/players', params = { 'nick' => 'janusz' }
+        uid = last_response.body
+        $games['abcdef'].join uid, 'pseudo_stream'
+        uid
+      end
+
+      it 'returns proper white nick' do
+        patch '/games/abcdef', params = { 'uid' => uid, 'msg-type' => 'sit',
+          'color' => 'white' }
+        get '/games/abcdef/state'
+        parsed = JSON.parse(last_response.body)
+        expect(parsed['white']).to eq('janusz')
+      end
+
+      it 'returns proper black nick' do
+        patch '/games/abcdef', params = { 'uid' => uid, 'msg-type' => 'sit',
+          'color' => 'black' }
+        get '/games/abcdef/state'
+        parsed = JSON.parse(last_response.body)
+        expect(parsed['black']).to eq('janusz')
+      end
+
+      context 'and makes a move' do
+        before do
+          patch '/games/abcdef', params = { 'uid' => uid, 'msg-type' => 'sit',
+            'color' => 'white' }
+          patch '/games/abcdef', params = { 'msg-type' => 'move', 'uid' => uid,
+            'a1' => '6', 'a2' => '1', 'b1' => '5', 'b2' => '0' }
+        end
+
+        it 'returns a changed board' do
+          actual_board = game.board
+          get '/games/abcdef/state'
+          parsed_board = JSON.parse(JSON.parse(last_response.body)['board'])
+          expect(parsed_board).to eq(actual_board)
+        end
+
       end
 
     end

@@ -84,7 +84,7 @@ namespace '/games' do
             when 'w' then $games[id].white
             when 'b' then $games[id].black
           end
-          raise 'invalid uid' unless uid == valid_uid
+          raise "invalid uid #{uid}, expected #{valid_uid}" unless uid == valid_uid
           a = [ params['a1'].to_i, params['a2'].to_i ]
           b = [ params['b1'].to_i, params['b2'].to_i ]
           $games[id].move a, b
@@ -101,6 +101,13 @@ namespace '/games' do
       status 403
       body "Error: #{$!}"
     end
+  end
+
+  get '/:id/state' do |id|
+    state = $games[id].state
+    state[:white] = $players[state[:white]]
+    state[:black] = $players[state[:black]]
+    state.to_json
   end
 
   get '/:id/stream', provides: 'text/event-stream' do |id|

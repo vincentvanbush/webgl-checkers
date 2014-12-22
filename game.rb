@@ -1,7 +1,7 @@
 require './checkers.rb'
 
 class Game
-  attr_reader :white, :black, :user_streams
+  attr_reader :board, :white, :black, :user_streams
 
   def initialize
     @board = Checkerboard.new
@@ -49,6 +49,15 @@ class Game
 
   def notify_all data
     @user_streams.values.each { |stream| stream << data }
+  end
+
+  def state
+    hash = {
+      board: @board.board.to_json,
+      turn: turn,
+      white: @white,
+      black: @black
+    }
   end
 
 end
