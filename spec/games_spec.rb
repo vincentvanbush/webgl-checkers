@@ -107,11 +107,13 @@ context 'games' do
 
       context 'move message' do
 
-        it 'changes history for a valid move' do
+        it 'changes history for a sequence of two valid moves' do
           expect {
             patch '/games/abcdef', params = { 'msg-type' => 'move', 'uid' => uid,
               'a1' => '6', 'a2' => '1', 'b1' => '5', 'b2' => '0' }
-          }.to change { game.history }
+            patch '/games/abcdef', params = { 'msg-type' => 'move', 'uid' => uid2,
+              'a1' => '3', 'a2' => '0', 'b1' => '4', 'b2' => '1' }
+          }.to change { game.history.size }.from(0).to(2)
         end
 
         it 'doesnt change history for an invalid move' do
@@ -199,7 +201,7 @@ context 'games' do
         end
 
         it 'returns a changed board' do
-          actual_board = game.board
+          actual_board = game.board.board
           get '/games/abcdef/state'
           parsed_board = JSON.parse(JSON.parse(last_response.body)['board'])
           expect(parsed_board).to eq(actual_board)
