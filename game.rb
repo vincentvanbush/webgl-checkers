@@ -70,4 +70,8 @@ class Game
     }
   end
 
+  def end?
+    @board.end?
+  end
+
 end

@@ -155,8 +155,8 @@ context 'games' do
     let(:game) { $games['abcdef'] }
 
     it 'returns proper board size' do
-      expect(board.size).to eq(10)
-      board.each { |row| expect(row.size).to eq(10) }
+      expect(board.size).to eq(8)
+      board.each { |row| expect(row.size).to eq(8) }
     end
 
     it 'returns proper turn' do

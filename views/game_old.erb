@@ -1,0 +1,35 @@
+<form id="uid_form">
+  <input id="game_id" type="hidden" value="<%= @id %>" />
+  <input id="uid" type="hidden" value="<%= @uid %>" />
+</div>
+
+<form id="actions_form">
+  <a href="#" onclick="state()">state</a>
+  <a href="#" onclick="ajaxBoard('<%= @id %>', displayBoard)">board</a>
+</div>
+
+<div id="sit_form">
+  <input id="sit_color" type="text" placeholder="white/black" />
+  <a href="#" onclick="sit()">sit</a>
+  <a href="#" onclick="unsit()">unsit</a>
+</div>
+
+<div id="move_form">
+  <input id="game_id" type="hidden" value="<%= @id %>" />
+  <input id="a1" type="text" placeholder="a1" />
+  <input id="a2" type="text" placeholder="a2" />
+  <input id="b1" type="text" placeholder="b1" />
+  <input id="b2" type="text" placeholder="b2" />
+  <a href="#" onclick="move()">move</a>
+</div>
+
+<div id="board">
+
+</div>
+
+<div id="notifications">
+
+</div>
+
+<script type="text/javascript" src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="/js/game_conn.js"></script>

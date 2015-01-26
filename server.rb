@@ -22,6 +22,8 @@ register Sinatra::AssetPack
 assets do
   js :application, ['/js/*.js']
   css :application, ['/css/*.css']
+
+  serve '/3d_assets', from: 'app/3d_assets';
 end
 
 def register_player nick
@@ -73,10 +75,13 @@ namespace '/games' do
         status 403
         body "Game #{id} does not exist"
       else
+        notification = params.merge( {'timestamp' => timestamp} )
+
         msg_type = params['msg-type']
         uid = params['uid']
 
         case msg_type
+
         when 'sit'
           color = case params['color']
             when 'white' then :white
@@ -84,9 +89,11 @@ namespace '/games' do
           end
           $games[id].sit color, uid
           "#{$players[uid]} sits in game #{id} as #{color}"
+
         when 'unsit'
           $games[id].unsit uid
           "#{$players[uid]} unsits in game #{id}"
+
         when 'move'
           valid_uid = case $games[id].turn
             when 'w' then $games[id].white
@@ -96,12 +103,15 @@ namespace '/games' do
           a = [ params['a1'].to_i, params['a2'].to_i ]
           b = [ params['b1'].to_i, params['b2'].to_i ]
           $games[id].move a, b
+          notification = notification.merge( { 'turn' => $games[id].turn } )
           "Moved from #{a} to #{b} in game #{id}"
+
         else
           raise "Unknown message type from #{$players[uid]}: #{msg_type}"
         end
 
-        notification = params.merge( {'timestamp' => timestamp} ).to_json
+        notification = notification.merge( {'ending' => true} ) if $games[id].end?
+        notification = notification.to_json
         notif_data = "data: #{notification}\n\n"
         $games[id].notify_all(notif_data)
         "Patched #{id} succesfully: #{notif_data}"
